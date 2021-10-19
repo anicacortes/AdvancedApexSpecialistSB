@@ -1,10 +1,23 @@
-<apex:page controller="Product2Extension" >
+<apex:page standardController="Product2" extensions="Product2Extension" >
     <apex:sectionHeader title="New Product" subtitle="Add Inventory" />
     <apex:pageMessages id="pageMessages" />
     <apex:form id="form" >
         <apex:actionRegion >
             <apex:pageBlock title="Existing Inventory" >
-                Chart goes here
+                <!--                Chart goes here-->
+                <apex:chart height="350" width="450" data="{!inventory}">
+                    <apex:axis type="Numeric" position="bottom" title="Quantity Remaining" grid="true"
+                               fields="val" dashSize="2">
+                        <apex:chartLabel />
+                    </apex:axis>
+                    <apex:axis type="Category" position="left" fields="name" title="Product Family">
+                        <apex:chartLabel rotate="315"/>
+                    </apex:axis>
+                    <apex:barSeries orientation="horizontal" axis="left"
+                                    xField="val" yField="name"/>
+                    <apex:legend position="right"/>
+                </apex:chart>
+
             </apex:pageBlock>
             <apex:pageBlock title="New Products" >
                 <apex:pageBlockButtons location="top">
@@ -16,20 +29,21 @@
 
                 <apex:pageBlockTable value="{!productsToInsert}" var="p" id="orderItemTable" >
                     <apex:column headerValue="Name" >
-                        <apex:inputText value="{!p.Name}" />
+                        <apex:inputText value="{!p.productRecord.Name}" />
                     </apex:column>
                     <apex:column headerValue="Family" >
-                        <apex:selectList value="{!p.Family}" size="1" multiselect="false" >
+                        <apex:selectList value="{!p.productRecord.Family}" size="1" multiselect="false" >
+                            <apex:selectOptions value="{!familyOptions}"/>
                         </apex:selectList>
                     </apex:column>
                     <apex:column headerValue="Active" >
-                        <apex:inputField value="{!p.isActive}" />
+                        <apex:inputField value="{!p.productRecord.isActive}" />
                     </apex:column>
                     <apex:column headerValue="UnitPrice" >
-                        <inputText value="UnitPrice" />
+                        <inputText value="{!p.pricebookEntryRecord.UnitPrice}" />
                     </apex:column>
                     <apex:column headerValue="Init Inventory" >
-                        <apex:inputField value="{!p.Initial_Inventory__c}" />
+                        <apex:inputField value="{!p.productRecord.Initial_Inventory__c}" />
                     </apex:column>
                 </apex:pageBlockTable>
             </apex:pageBlock>
