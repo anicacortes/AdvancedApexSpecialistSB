@@ -8,9 +8,6 @@ public with sharing class TestDataFactory {
      * @return CollaborationGroup
      */
     public static CollaborationGroup ConstructCollaborationGroup(){
-        //ToDo: Ensure this method returns a single Chatter CollaborationGroup
-        //    whose Name starts with 'TEST' followed by the INVENTORY_ANNOUNCEMENTS constant
-        //    and configured so anyone can join, see and post updates.
         CollaborationGroup collGroup = new CollaborationGroup();
         collGroup.Name = 'TEST' + Constants.INVENTORY_ANNOUNCEMENTS;
         collGroup.CollaborationType = 'Public';
@@ -23,18 +20,13 @@ public with sharing class TestDataFactory {
      * @description Constructs a list of Product2 records for unit tests
     **/
     public static List<Product2> ConstructProducts(Integer cnt){
-        //ToDo: Ensure this method returns a list, of size cnt, of uniquely named Product2 records
-        //  with all the required fields populated
-        //  and IsActive = true
-        //  an Initial Inventory set to 10
-        //  and iterating through the product family picklist values throughout the list.
         List<Product2> newProdList = new List<Product2>();
         for(Integer i = 0; i < cnt; i++) {
             Product2 prod = new Product2();
             prod.Name = 'Test product ' + i;
             prod.IsActive = true;
             prod.Initial_Inventory__c = 10;
-            prod.Family = Constants.PRODUCT_FAMILY.get(i).getValue();
+            prod.Family = Constants.PRODUCT_FAMILY.get(Math.mod(i, 4)).getValue();
 
             newProdList.add(prod);
         }
@@ -46,11 +38,6 @@ public with sharing class TestDataFactory {
      * @description Constructs a list of PricebookEntry records for unit tests
     **/
     public static List<PricebookEntry> ConstructPricebookEntries(List<Product2> prods){
-        //ToDo: Ensure this method returns a corresponding list of PricebookEntries records
-        //  related to the provided Products
-        //  with all the required fields populated
-        //  and IsActive = true
-        //  and belonging to the standard Pricebook
         List<PricebookEntry> entriesList = new List<PricebookEntry>();
 
         for(Product2 eachProd: prods) {
@@ -58,6 +45,7 @@ public with sharing class TestDataFactory {
             newEntry.Product2Id = eachProd.Id;
             newEntry.IsActive = true;
             newEntry.Pricebook2Id = Constants.STANDARD_PRICEBOOK_ID;
+            newEntry.UnitPrice = 10;
 
             entriesList.add(newEntry);
         }
@@ -69,8 +57,6 @@ public with sharing class TestDataFactory {
      * @description Constructs a list of Account records for unit tests
     **/
     public static List<Account> ConstructAccounts(Integer cnt){
-        //ToDo: Ensure this method returns a list of size cnt of uniquely named Account records
-        //  with all of the required fields populated.
         List<Account> listAccounts = new List<Account>();
 
         for(Integer i = 0; i < cnt; i++) {
@@ -87,10 +73,6 @@ public with sharing class TestDataFactory {
      * @description Constructs a list of Contacxt records for unit tests
     **/
     public static List<Contact> ConstructContacts(Integer cnt, List<Account> accts){
-        //ToDo: Ensure this method returns a list, of size cnt, of uniquely named Contact records
-        //  related to the provided Accounts
-        //  with all of the required fields populated.
-
         List<Contact> listContacts = new List<Contact>();
 
         for(Integer i = 0; i < cnt; i++) {
@@ -109,9 +91,6 @@ public with sharing class TestDataFactory {
      * @description Constructs a list of Order records for unit tests
     **/
     public static List<Order> ConstructOrders(Integer cnt, List<Account> accts){
-        //ToDo: Ensure this method returns a list of size cnt of uniquely named Order records
-        //  related to the provided Accounts
-        //  with all of the required fields populated.
 
         List<Order> listOrders = new List<Order>();
 
@@ -119,6 +98,9 @@ public with sharing class TestDataFactory {
             Order order = new Order();
             order.Name = 'Test Order ' + accts.get(i).Id;
             order.AccountId = accts.get(i).Id;
+            order.Status = 'Draft';
+            order.Pricebook2Id = Constants.STANDARD_PRICEBOOK_ID;
+            order.EffectiveDate = Date.today();
 
             listOrders.add(order);
         }
@@ -131,11 +113,6 @@ public with sharing class TestDataFactory {
      * @description Constructs a list of OrderItem records for unit tests
     **/
     public static List<OrderItem> ConstructOrderItems(integer cnt, list<pricebookentry> pbes, list<order> ords){
-        //ToDo: Ensure this method returns a list of size cnt of OrderItem records
-        //  related to the provided Pricebook Entries
-        //  and related to the provided Orders
-        //  with all of the required fields populated.
-        //  Hint: Use the DEFAULT_ROWS constant for Quantity as it will be used in the next challenge
         List<OrderItem> itemsList = new List<OrderItem>();
 
         for(Integer i = 0; i < cnt; i++) {
@@ -143,6 +120,7 @@ public with sharing class TestDataFactory {
             item.PricebookEntryId = pbes.get(i).Id;
             item.OrderId = ords.get(i).Id;
             item.Quantity = Constants.DEFAULT_ROWS;
+            item.UnitPrice = 10;
 
             itemsList.add(item);
         }
@@ -154,25 +132,26 @@ public with sharing class TestDataFactory {
      * @description Inserts accounts, contacts, Products, PricebookEntries, Orders, and OrderItems.
     **/
     public static void InsertTestData(Integer cnt){
-        //ToDo: Ensure this method calls each of the construct methods
-        //  and inserts the results for use as test data.
-        insert ConstructCollaborationGroup();
+        CollaborationGroup collgroup = ConstructCollaborationGroup();
+        insert collgroup;
 
-        List<Product2> listProds = ConstructProducts(Constants.DEFAULT_ROWS);
+        List<Product2> listProds = ConstructProducts(cnt);
         insert listProds;
 
         List<PricebookEntry> entries = ConstructPricebookEntries(listProds);
         insert entries;
 
-        List<Account> accList = ConstructAccounts(Constants.DEFAULT_ROWS);
+        List<Account> accList = ConstructAccounts(cnt);
         insert accList;
 
-        ConstructContacts(Constants.DEFAULT_ROWS, accList);
+        List<Contact> conts = ConstructContacts(cnt, accList);
+        insert conts;
 
-        List<Order> orderList = ConstructOrders(Constants.DEFAULT_ROWS, accList);
+        List<Order> orderList = ConstructOrders(cnt, accList);
         insert orderList;
 
-        ConstructOrderItems(Constants.DEFAULT_ROWS, entries, orderList);
+        List<OrderItem> items = ConstructOrderItems(cnt, entries, orderList);
+        insert items;
     }
 
 }
