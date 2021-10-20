@@ -5,11 +5,11 @@ public class Product2Helper {
      * @description List of CollaborationGroup used in both business and test logic
     **/
     static List<CollaborationGroup> COLLABORATION_GROUP = [
-        SELECT Id
-        FROM CollaborationGroup
-        WHERE Name = 'group name'
-        OR Name = :('TEST'+'group name')
-        LIMIT 1
+            SELECT Id
+            FROM CollaborationGroup
+            WHERE Name =: Constants.INVENTORY_ANNOUNCEMENTS
+            OR Name = :('TEST'+ Constants.INVENTORY_ANNOUNCEMENTS)
+            LIMIT 1
     ];
 
     /**
@@ -18,7 +18,22 @@ public class Product2Helper {
      * @param List<Product2> newList
      * @param List<Product2> oldList
     **/
-    public static void AfterUpdate(){
+    public static void AfterUpdate(List<Product2> listProds){
+        List<Product2> needsAnnouncement = new List<Product2>();
+        Map<String, Inventory_Setting__mdt> mapSettings = new Map<String, Inventory_Setting__mdt>();
+
+        for(Inventory_Setting__mdt setting : [SELECT Id, DeveloperName, Low_Quantity_Alert__c FROM Inventory_Setting__mdt]) {
+            mapSettings.put(setting.DeveloperName, setting);
+        }
+
+        for(Product2 prod : listProds) {
+            Inventory_Setting__mdt mdtRelated = mapSettings.get(prod.Family);
+            if(prod.Quantity_Remaining__c < mdtRelated.Low_Quantity_Alert__c) {
+                needsAnnouncement.add(prod);
+            }
+        }
+
+        PostAlerts(needsAnnouncement);
         //ToDo: Declare a List of Product2 records named needsAnnouncement
 
         //ToDo: Declare a Map of Strings to Inventory_Setting__mdt records
@@ -42,10 +57,22 @@ public class Product2Helper {
         List<ConnectApi.AnnouncementInput> toPost = new List<ConnectApi.AnnouncementInput>();
         for ( Product2 p : productList ){
             // ToDo: Construct a new AnnouncementInput for the Chatter Group so that it:
-            // expires in a day
-            // does not notify users via email.
+            ConnectApi.AnnouncementInput input = new ConnectApi.AnnouncementInput();
+            input.expirationDate = Datetime.now().addDays(1);
+            input.sendEmails = false;
+            ConnectApi.MessageBodyInput bodyInput = new ConnectApi.MessageBodyInput();
+            ConnectApi.TextSegmentInput textInput = new ConnectApi.TextSegmentInput();
             // and has a text body that includes the name of the product followed by the INVENTORY_LEVEL_LOW constant
+            textInput.text = p.Name + ' , ' + Constants.INVENTORY_LEVEL_LOW;
+            bodyInput.messageSegments = new List<ConnectApi.TextSegmentInput>();
+            bodyInput.messageSegments.add(textInput);
+            input.body = bodyInput;
+            //input.parentId = COLLABORATION_GROUP[0].Id;
+            toPost.add(input);
         }
+        AnnouncementQueueable announc = new AnnouncementQueueable();
+        announc.toPost = toPost;
+        Id jobID = System.enqueueJob(announc);
         // ToDo: Create and enqueue an instance of the announcementQueuable class with the list of Products
     }
 }
