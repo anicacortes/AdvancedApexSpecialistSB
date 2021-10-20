@@ -25,12 +25,14 @@ public class Product2Extension {
             List<PricebookEntry> newEntriesList = new List<PricebookEntry>();
 
             for(ProductWrapper wrap : productsToInsert) {
-                if(String.isNotBlank(wrap.productRecord.Name) && wrap.pricebookEntryRecord.UnitPrice!=null &&
+                /*if(String.isNotBlank(wrap.productRecord.Name) && wrap.pricebookEntryRecord.UnitPrice!=null &&
                         wrap.productRecord.Initial_Inventory__c!=null && wrap.productRecord.IsActive &&
                         wrap.productRecord.Initial_Inventory__c != 0 && wrap.pricebookEntryRecord.UnitPrice!=0) {
                     prodsList.add(wrap.productRecord);
                     entriesList.add(wrap.pricebookEntryRecord);
-                }
+                }*/
+                prodsList.add(wrap.productRecord);
+                entriesList.add(wrap.pricebookEntryRecord);
             }
 
             Database.SaveResult[] productSaveResults = Database.insert(prodsList, false);

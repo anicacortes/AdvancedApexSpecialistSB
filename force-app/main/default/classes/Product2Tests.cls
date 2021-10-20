@@ -6,7 +6,7 @@ private class Product2Tests {
      * @description UnitTest for product2Extension
     **/
     @IsTest
-    static void Product2Extension_UnitTest(){
+    private static void Product2Extension_UnitTest(){
 
         List<Product2> listProds = TestDataFactory.ConstructProducts(1);
 
@@ -31,6 +31,28 @@ private class Product2Tests {
         List<Product2> prodsAfter = [SELECT Id FROM Product2];
         System.assertEquals(prodsAfter.size(), 5);
 
+        Test.stopTest();
+    }
+
+    @IsTest
+    private static void Product2Trigger_UnitTest() {
+        Test.startTest();
+        Product2 newProduct = new Product2();
+        newProduct.Name = 'Test';
+        newProduct.Family = 'Beverage';
+        newProduct.IsActive = true;
+        newProduct.Quantity_Ordered__c = 10;
+        newProduct.Initial_Inventory__c = 15;
+        insert newProduct;
+
+        CollaborationGroup c = new CollaborationGroup();
+        c.Name = 'TEST' + Constants.INVENTORY_ANNOUNCEMENTS;
+        c.Description = 'Blabla';
+        c.CollaborationType = 'Public';
+        insert c;
+
+        newProduct.Quantity_Ordered__c = 96;
+        update newProduct;
         Test.stopTest();
     }
 
